@@ -1,30 +1,45 @@
 # kadmus-dev
 hackaton 2021 https://lk.leaders2021.innoagency.ru/
 
-how to use map_builder:  
+
+### Application
+
+~~~
+python visual_build/main.py
+~~~
+
+
+### Docker
+
+docker cp /dir_with_your_data kadmus/app_no_interface:/code/test  
+/dir_with_your_data - папка с .TIF и .TFW
+
+
+### Tagging
+
+Запуск из командной строки:  
+~~~
+python tagging/pipeline.py get_mask img.tif
+~~~
+Возвращает цветную маску где красным цветом на белом фоне выделены области которые нашла нейросеть. Маска сохраняется в img_mask.tif.  
+Затем остается только ластиком стереть все неугодные епта красные метки, затем сконвертить маску в .npy; команда для конвертации:
+~~~
+python tagging/pipeline.py get_npy img_mask.tif
+~~~
+Красный цвет заменяет на белый, все остальное - на черный.  
+Команда чтобы посмотреть результат наложения маски и изображения:
+~~~
+python tagging/pipeline.py blend image.tif mask.tif  
+~~~
+
+
+### Build shapefile
+
+How to use map_builder:  
 1. Put all .NPY and .TFW files to separate directory
 2. run map_builder/main.py  
 
 output: paths.shp and map.html
-
-### Application
-
-run python visual_build/main.py
-
-### Tagging
-
-запуск из командной строки:  
-python3 pipeline.py get_mask img.tif  
-возвращает цветную маску где красным цветом на белом фоне выделены области которые нашла сетка  
-маска сохраняется в img_mask.tif  
-затем остается только ластиком стереть все неугодные епта красные метки, затем сконвертить маску в npy; команда для конвертации:  
-python3 pipeline.py get_npy img_mask.tif  
-красный цвет заменяет на белый, все остальное - на черный  
-команда чтобы посмотреть результат наложения маски и пикчи:  
-python3 pipeline.py blend image.tif mask.tif  
-
-
-### Build shapefile
 
 ~~~python
 def build_shapefile(dataset_directory, file_list=None,
