@@ -6,3 +6,28 @@ how to use map_builder:
 2. run map_builder/main.py  
 
 output: paths.shp and map.html
+
+
+~~~python
+def build_shapefile(dataset_directory, file_list=None,
+                    output_filename: str = 'paths.shp',
+                    crs: str = 'epsg:32637',
+                    max_path_distance_cm: float = 100,
+                    max_path_width_cm: float = 60,
+                    min_bbox_size_m: float = 1,
+                    max_bbox_size_m: float = 200,
+                    p_epsilon: float = 0.3,
+                    c_epsilon: float = 0.3):
+~~~
+Build shapefile containing paths of all given images.
+
+__dataset_directory__: directory where .NPY mask files and .TFW world files are contained  
+__file_list__: list of filenames to be processed (without extensions)  
+__output_filename__: name of the output file (should be .SHP)  
+__crs__: initial coordinate reference system  
+__max_path_distance_cm__: max distance between paths for them to be connected in cm  
+__max_path_width_cm__: max path width  
+__min_bbox_size_m__: min size of path's bounding box in meters  
+__max_bbox_size_m__: maxsize of path's bounding box in meters  
+__p_epsilon__: RDP parameter to smooth path polygons  
+__c_epsilon__: RDP parameter to smooth their centerlines  
