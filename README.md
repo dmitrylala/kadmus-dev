@@ -1,2 +1,2 @@
-# kadmus-dev
-Team Kadmus Dev
+# leaders-paths
+hackaton 2021 leaders

@@ -1,0 +1,39 @@
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+  <style>
+    #mapfa1bed0c2f8a4fcba908cc7019d73124 {
+      height:100%;
+    }
+  </style> 
+</head>
+<body>
+  <div id="mapfa1bed0c2f8a4fcba908cc7019d73124"></div>
+<script text="text/javascript">
+var map = L.map('mapfa1bed0c2f8a4fcba908cc7019d73124');
+L.tileLayer(
+  "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {maxZoom:19, attribution: '<a href="https://github.com/jwass/mplleaflet">mplleaflet</a> | Map data (c) <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map);
+var gjData = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[37.13390223320813, 55.96025423647511], [37.13393563768472, 55.96029248684869], [37.13393710978672, 55.96031183072043]]}, "properties": {"color": "#FF0000", "weight": 1.5, "opacity": null, "dashArray": "10,0"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[37.13665259777292, 55.959212054023226], [37.13664537437425, 55.95922901966198], [37.13667280883225, 55.95925819222504], [37.1366655833886, 55.95925853229753]]}, "properties": {"color": "#FF0000", "weight": 1.5, "opacity": null, "dashArray": "10,0"}}]};
+
+if (gjData.features.length != 0) {
+  var gj = L.geoJson(gjData, {
+    style: function (feature) {
+      return feature.properties;
+    },
+    pointToLayer: function (feature, latlng) {
+      var icon = L.divIcon({'html': feature.properties.html, 
+        iconAnchor: [feature.properties.anchor_x, 
+                     feature.properties.anchor_y], 
+          className: 'empty'});  // What can I do about empty?
+      return L.marker(latlng, {icon: icon});
+    }
+  });
+  gj.addTo(map);
+  
+  map.fitBounds(gj.getBounds());
+} else {
+  map.setView([0, 0], 1);
+}
+</script>
+</body>
