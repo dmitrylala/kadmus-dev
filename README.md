@@ -8,6 +8,8 @@ how to use map_builder:
 output: paths.shp and map.html
 
 
+### Build shapefile
+
 ~~~python
 def build_shapefile(dataset_directory, file_list=None,
                     output_filename: str = 'paths.shp',
@@ -17,7 +19,7 @@ def build_shapefile(dataset_directory, file_list=None,
                     min_bbox_size_m: float = 1,
                     max_bbox_size_m: float = 200,
                     p_epsilon: float = 0.3,
-                    c_epsilon: float = 0.3):
+                    c_epsilon: float = 0.3)
 ~~~
 Build shapefile containing paths of all given images.
 
@@ -31,3 +33,11 @@ __min_bbox_size_m__: min size of path's bounding box in meters
 __max_bbox_size_m__: maxsize of path's bounding box in meters  
 __p_epsilon__: RDP parameter to smooth path polygons  
 __c_epsilon__: RDP parameter to smooth their centerlines  
+
+
+### Visualize
+
+~~~python
+def visualize(filename: str, output_file: str) -> None
+~~~
+Build an interactive map visualizing data in a shapefile. (matplotlib==3.3.2 required)
