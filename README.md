@@ -7,6 +7,22 @@ how to use map_builder:
 
 output: paths.shp and map.html
 
+### Application
+
+run python visual_build/main.py
+
+### Tagging
+
+запуск из командной строки:  
+python3 pipeline.py get_mask img.tif  
+возвращает цветную маску где красным цветом на белом фоне выделены области которые нашла сетка  
+маска сохраняется в img_mask.tif  
+затем остается только ластиком стереть все неугодные епта красные метки, затем сконвертить маску в npy; команда для конвертации:  
+python3 pipeline.py get_npy img_mask.tif  
+красный цвет заменяет на белый, все остальное - на черный  
+команда чтобы посмотреть результат наложения маски и пикчи:  
+python3 pipeline.py blend image.tif mask.tif  
+
 
 ### Build shapefile
 
