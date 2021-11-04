@@ -203,8 +203,7 @@ def build_shapefile(dataset_directory, file_list=None,
     # get all files from dataset directory
     if file_list is None:
         file_list = [f for f in listdir(dataset_directory) if isfile(join(dataset_directory, f))]
-        file_list = sum([f.split('.') for f in file_list], [])
-        file_list = {f for f in file_list if f not in {"npy", "tfw", "tif", "prj"}}
+        file_list = [f[:-4] for f in file_list if f[-4:] == ".npy"]
 
     images = [PathImage(join(dataset_directory, filename),
                         max_path_distance_cm=max_path_distance_cm,
