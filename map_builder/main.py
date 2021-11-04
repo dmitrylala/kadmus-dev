@@ -6,12 +6,11 @@ import timeit
 def main():
     start = timeit.default_timer()
 
-    build_shapefile(r'D:\data\dl_masks8', output_filename="output/paths.shp")
+    build_shapefile(r'C:\Users\kozub\Downloads\masks', output_filename="../results/paths.shp")
+    visualize("../results/paths.shp", "../results/map.html")
 
     stop = timeit.default_timer()
     print('Time: ', stop - start)
-    
-    # visualize("output/paths.shp", "map.html")
 
 
 if __name__ == "__main__":

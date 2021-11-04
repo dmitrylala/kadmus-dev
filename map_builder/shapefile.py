@@ -58,6 +58,15 @@ class PixelPolygon(object):
         """
         self.__sequence = [(x_func(x), y_func(y)) for y, x in self.__sequence]
 
+    def to_shapely(self) -> Optional[Polygon]:
+        """
+        Build shapely.geometry.Polygon from coordinate sequence if possible.
+        """
+        try:
+            return Polygon(self.__sequence)
+        except ValueError:
+            return None
+
     def build_centerline(self, p_epsilon: float = 0.3, c_epsilon: float = 0.3) -> Optional[LineString]:
         """
         Build centerline of the polygon.
@@ -79,26 +88,29 @@ class PathImage(object):
     """
 
     def __init__(self, filename: str,
-                 max_path_distance_cm: float = 100,
-                 max_path_width_cm: float = 80,
-                 min_bbox_size_m: float = 1,
-                 max_bbox_size_m: float = 200):
+                 max_path_distance_cm: float = 100.,
+                 max_path_width_cm: float = 80.,
+                 min_bbox_size_m: float = 1.,
+                 max_bbox_size_m: float = 200.,
+                 max_path_area_m2: float = 1000.):
         """
         :param filename: name of .NPY file with image mask
         :param max_path_distance_cm: max distance between paths for them to be connected in cm
         :param max_path_width_cm: max path width
         :param min_bbox_size_m: min size of path's bounding box in meters
-        :param max_bbox_size_m: maxsize of path's bounding box in meters
+        :param max_bbox_size_m: max size of path's bounding box in meters
+        :param max_path_area_m2: max path area in m^2
         """
         self.__image = np.load(filename + '.npy')
         self.__min_bbox_size_m = min_bbox_size_m
         self.__max_bbox_size_m = max_bbox_size_m
+        self.__max_path_area_m2 = max_path_area_m2
         with open(filename + '.tfw', 'r') as f:
             data = f.read().split('\n')
             self.__x_transform = lambda x: float(data[4]) + x * float(data[0])
             self.__y_transform = lambda y: float(data[5]) + y * float(data[3])
-            self.__max_pixel_path_distance = max_path_distance_cm // (fabs(float(data[0])) * 100)
-            self.__max_pixel_path_width = max_path_width_cm // (fabs(float(data[0])) * 100)
+            self.__max_pixel_path_distance = int(max_path_distance_cm // (fabs(float(data[0])) * 100))
+            self.__max_pixel_path_width = int(max_path_width_cm // (fabs(float(data[0])) * 100))
 
     def is_empty(self) -> bool:
         """
@@ -138,17 +150,19 @@ class PathImage(object):
             image_paths.append((i, self.__merge_paths(row_paths, self.__max_pixel_path_distance)))
         return image_paths
 
-    def __check_bbox(self, centerline):
-        if centerline is None:
-            return None
-        bbox = centerline.bounds
+    def __check_polygon_size(self, polygon: Polygon):
+        if polygon is None:
+            return False
+        if polygon.area > self.__max_path_area_m2:
+            return False
+        bbox = polygon.bounds
         if bbox[2] - bbox[0] < self.__min_bbox_size_m and bbox[3] - bbox[1] < self.__min_bbox_size_m:
-            return None
+            return False
         if bbox[2] - bbox[0] > self.__max_bbox_size_m or bbox[3] - bbox[1] > self.__max_bbox_size_m:
-            return None
-        return centerline
+            return False
+        return True
 
-    def get_paths(self, p_epsilon: float = 0.3, c_epsilon: float = 0.3) -> List[Optional[LineString]]:
+    def get_paths(self, p_epsilon: float = 0.3, c_epsilon: float = 2.) -> List[Optional[LineString]]:
         """
         Get list of all paths on the image.
 
@@ -171,31 +185,43 @@ class PathImage(object):
 
         for polygon in polygons:
             polygon.coord_transform(self.__x_transform, self.__y_transform)
+        polygons = [polygon for polygon in polygons if self.__check_polygon_size(polygon.to_shapely())]
         centerlines = [polygon.build_centerline(p_epsilon, c_epsilon) for polygon in polygons]
-        centerlines = [self.__check_bbox(centerline) for centerline in centerlines]
         return [centerline for centerline in centerlines if centerline is not None]
 
 
-def build_shapefile(dataset_directory, file_list=None,
+def remove_building_intersection(paths: gpd.GeoDataFrame, buildings_file: str) -> gpd.GeoDataFrame:
+    buildings = gpd.read_file(buildings_file, bbox=tuple(paths.to_crs('epsg:4326').geometry.total_bounds))
+    buildings = buildings[["geometry"]]
+    sjoin = gpd.sjoin(paths.to_crs('epsg:4326'), buildings, how="inner")
+    return paths[~paths.index.isin(sjoin.index)].reset_index(drop=True)
+
+
+def build_shapefile(dataset_directory: str,
+                    file_list: list = None,
+                    buildings_file: str = "Moscow_Buildings.zip",
                     output_filename: str = 'paths.shp',
                     crs: str = 'epsg:32637',
-                    max_path_distance_cm: float = 100,
-                    max_path_width_cm: float = 80,
-                    min_bbox_size_m: float = 1,
-                    max_bbox_size_m: float = 200,
+                    max_path_distance_cm: float = 100.,
+                    max_path_width_cm: float = 80.,
+                    min_bbox_size_m: float = 1.,
+                    max_bbox_size_m: float = 200.,
+                    max_path_area_m2: float = 100.,
                     p_epsilon: float = 0.3,
-                    c_epsilon: float = 0.3):
+                    c_epsilon: float = 2.) -> None:
     """
     Build shapefile containing paths of all given images.
 
     :param dataset_directory: directory where .NPY mask files and .TFW world files are contained
     :param file_list: list of filenames to be processed (without extensions)
+    :param buildings_file: file with buildings (polygons) in 'epsg:4326'
     :param output_filename: name of the output file (should be .SHP)
     :param crs: initial coordinate reference system
     :param max_path_distance_cm: max distance between paths for them to be connected in cm
     :param max_path_width_cm: max path width
     :param min_bbox_size_m: min size of path's bounding box in meters
-    :param max_bbox_size_m: maxsize of path's bounding box in meters
+    :param max_bbox_size_m: max size of path's bounding box in meters
+    :param max_path_area_m2: max path area in m^2
     :param p_epsilon: RDP parameter to smooth path polygons
     :param c_epsilon: RDP parameter to smooth their centerlines
     """
@@ -207,10 +233,11 @@ def build_shapefile(dataset_directory, file_list=None,
 
     images = [PathImage(join(dataset_directory, filename),
                         max_path_distance_cm=max_path_distance_cm,
+                        max_path_width_cm=max_path_width_cm,
                         min_bbox_size_m=min_bbox_size_m,
-                        max_bbox_size_m=max_bbox_size_m) for filename in file_list]
+                        max_bbox_size_m=max_bbox_size_m,
+                        max_path_area_m2=max_path_area_m2) for filename in file_list]
     images = [image for image in images if not image.is_empty()]
     centerlines = sum([image.get_paths(p_epsilon=p_epsilon, c_epsilon=c_epsilon) for image in tqdm(images)], [])
-    geometry = gpd.GeoSeries(centerlines)
-    geometry.crs = crs
-    gpd.GeoDataFrame(geometry, columns=['geometry']).to_file(output_filename)
+    paths = gpd.GeoDataFrame(centerlines, columns=['geometry'], crs=crs)
+    remove_building_intersection(paths, buildings_file).to_file(output_filename)
