@@ -1,5 +1,4 @@
-# kadmus-dev
-hackaton 2021 https://lk.leaders2021.innoagency.ru/
+# Lawn paths recognition system
 
 
 ### Application
@@ -11,18 +10,19 @@ python visual_build/main.py
 
 ### Docker
 
-docker cp /dir_with_your_data kadmus/app_no_interface:/code/test  
-/dir_with_your_data - папка с .TIF и .TFW
+~~~
+docker cp /dir_with_tif_tfw kadmus/app_no_interface:/code/test
+~~~
 
 
-### Tagging
+### Preliminary Markup
 
 Запуск из командной строки:  
 ~~~
 python tagging/pipeline.py get_mask img.tif
 ~~~
-Возвращает цветную маску где красным цветом на белом фоне выделены области которые нашла нейросеть. Маска сохраняется в img_mask.tif.  
-Затем остается только ластиком стереть все неугодные епта красные метки, затем сконвертить маску в .npy; команда для конвертации:
+Возвращает маску, где красным цветом на белом фоне выделены области, которые нашла нейросеть. Маска сохраняется в img_mask.tif.  
+Остается стереть лишние красные метки, затем сконвертировать маску в .npy; команда для конвертации:
 ~~~
 python tagging/pipeline.py get_npy img_mask.tif
 ~~~
