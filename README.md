@@ -1,5 +1,13 @@
 # Lawn paths recognition system
 
+
+## Docker
+
+~~~
+docker cp /dir_with_tif_tfw kadmus/app_no_interface:/code/test
+~~~
+
+
 ## Description
 
 ### Shapefile
@@ -28,21 +36,19 @@
 4. Перейти на шаг 1  
 
 
-## Application
+
+
+
+
+
+
+## Documentation
+
+### Application
 
 ~~~
 python visual_build/main.py
 ~~~
-
-
-## Docker
-
-~~~
-docker cp /dir_with_tif_tfw kadmus/app_no_interface:/code/test
-~~~
-
-
-## Documentation
 
 ### Preliminary Markup
 
